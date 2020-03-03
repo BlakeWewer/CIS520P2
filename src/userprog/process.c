@@ -35,7 +35,7 @@ process_execute (const char *file_name)
   tid_t tid;
 
   char *split_file_name;
-  file_name = __strtok_r(file_name, " ", &split_file_name);
+  file_name = strtok_r((char*)file_name, " ", &split_file_name);
 
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
@@ -57,6 +57,7 @@ static void
 start_process (void *file_name_)
 {
   char *file_name = file_name_;
+  char* save_ptr;
   struct intr_frame if_;
   bool success;
 
@@ -65,7 +66,7 @@ start_process (void *file_name_)
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-  success = load (file_name, &if_.eip, &if_.esp);
+  success = load (file_name, &if_.eip, &if_.esp, &save_ptr);
 
   /* If load failed, quit. */
   palloc_free_page (file_name);
@@ -234,9 +235,6 @@ load (const char *file_name, void (**eip) (void), void **esp, char** save_ptr)
       printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
-
-    file_deny_write(file);
-    t->executable = file;
 
   /* Read and verify executable header. */
   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
@@ -448,7 +446,9 @@ setup_stack (void **esp, char **save_ptr, const char *file_name)
       if (success)
         *esp = PHYS_BASE;
       else
+      {
         palloc_free_page (kpage);
+      }
         return success;
     }
   char* token;
@@ -460,7 +460,7 @@ setup_stack (void **esp, char **save_ptr, const char *file_name)
   int a_size = 2;
   int b_size = 0;
 
-  for(token = (char*)file_name; token != NULL; token = __strtok_r(NULL, " ", save_ptr))
+  for(token = (char*)file_name; token != NULL; token = strtok_r(NULL, " ", save_ptr))
   {
     cont[argc] = token;
     argc++;
@@ -499,7 +499,7 @@ setup_stack (void **esp, char **save_ptr, const char *file_name)
   // push argv
   *esp -= sizeof (char**);
   b_size += sizeof (char**);
-  memcpy(*esp, &token, sizeof(char**));
+  memcpy(*esp, &token, sizeof(char*));
   // push argc
   *esp -= sizeof (int);
   b_size += sizeof (int);
@@ -511,7 +511,7 @@ setup_stack (void **esp, char **save_ptr, const char *file_name)
   // free argv and cont
   free(argv);
   free(cont);
-  
+
   return success;	  return success;
 }
 

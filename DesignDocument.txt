@@ -10,3 +10,8 @@ Process.c:
     static bool load (const char *cmdline, void (**eip) (void), void **esp, char **saveptr)
 
     Referenced: https://github.com/st2092/pintos-user-programs
+
+
+synch.h:
+    struct list_elem elem;
+
