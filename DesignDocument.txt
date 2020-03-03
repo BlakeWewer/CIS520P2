@@ -1,7 +1,12 @@
 Changes Made:
 
-process_execute()
-    Added split_file_name and strtok_r on file_name
+Process.c:
 
+    process_execute()
+        Added split_file_name and strtok_r on file_name
+
+    setup_stack(void **esp, char **save_ptr, const char *file_name) 
+
+    static bool load (const char *cmdline, void (**eip) (void), void **esp, char **saveptr)
 
     Referenced: https://github.com/st2092/pintos-user-programs
