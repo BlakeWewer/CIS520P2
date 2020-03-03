@@ -15,3 +15,14 @@ Process.c:
 synch.h:
     struct list_elem elem;
 
+thread.h:
+    int is_thread_alive(int pid);
+    struct child_process* add_child_process(int pid);
+    void thread_release_locks(void);
+
+    Referenced: https://github.com/st2092/pintos-user-programs
+
+thread.c:
+    implemented child and parent process stuff
+
+    Referenced: https://github.com/st2092/pintos-user-programs
