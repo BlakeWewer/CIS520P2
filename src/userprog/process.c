@@ -22,7 +22,7 @@
 #include "userprog/syscall.h"
 
 static thread_func start_process NO_RETURN;
-static bool load (const char *cmdline, void (**eip) (void), void **esp, char **saveptr);
+static bool load (const char *cmdline, void (**eip) (void), void **esp, char **save_ptr);
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
@@ -544,7 +544,7 @@ setup_stack (void **esp, char **save_ptr, const char *file_name)
   free(argv);
   free(cont);
 
-  return success;	  return success;
+  return success;
 }
 
 /* Adds a mapping from user virtual address UPAGE to kernel
