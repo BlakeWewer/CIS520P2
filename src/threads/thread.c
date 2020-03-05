@@ -481,7 +481,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->parent = -1;             //Don't exist yet
   list_init(&t->lock_list);
   t->executable = NULL;
-  sema_init(&t->waited_on, 0);
+  sema_init((&t->waited_on), 0);
   t->exit_status = -1;
 
   list_push_back(&all_list, &t->allelem);
@@ -619,11 +619,11 @@ int is_thread_alive (int pid){
 /* add a new child process to list */
 struct child_process* add_child_process (int pid)
 {
-  struct child_process *cp = malloc(sizeof(struct child_process));
+  struct child_process *cp = malloc(sizeof(child_process));
   cp->pid = pid;
-  cp->load_status = NOT_LOADED;
-  cp->wait = 0; // false
-  cp->exit = 0; // false
+  &cp->load_status = NOT_LOADED;
+  &cp->wait = 0; // false
+  &cp->exit = 0; // false
   sema_init(&cp->load_sema, 0);
   sema_init(&cp->exit_sema, 0);
   list_push_back(&thread_current()->child_list, &cp->elem);

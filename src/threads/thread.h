@@ -107,10 +107,11 @@ struct thread
     struct list child_list;
     struct list_elem child_elem;
     tid_t parent;
-    struct semaphore waited_on;
+    
     struct child_process* cp;
     struct file* executable;
     struct list lock_list;
+    struct semaphore *waited_on;
   };
 
 /* If false (default), use round-robin scheduler.
