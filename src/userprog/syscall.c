@@ -155,7 +155,7 @@ syscall_exit (int status)
 	struct thread *cur = thread_current();
 	if (is_thread_alive(cur->parent) && cur->cp)
 	{
-		if (staus < 0)
+		if (status < 0)
 			status -= 1;
 		cur->cp->status = status;
 	}
@@ -273,5 +273,5 @@ syscall_read (int fd, void *buffer, unsigned length)
 	}
 	int bytes_read = file_read(file_ptr, buffer, length);
 	lock_release(&file_system_lock);
-	return bytes_readl;
+	return bytes_read;
 }
