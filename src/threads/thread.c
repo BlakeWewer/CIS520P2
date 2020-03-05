@@ -619,11 +619,11 @@ int is_thread_alive (int pid){
 /* add a new child process to list */
 struct child_process* add_child_process (int pid)
 {
-  struct child_process *cp = malloc(sizeof(child_process));
+  struct child_process *cp = malloc(sizeof(struct child_process));
   cp->pid = pid;
-  &cp->load_status = NOT_LOADED;
-  &cp->wait = 0; // false
-  &cp->exit = 0; // false
+  cp->load_status = NOT_LOADED;
+  cp->wait = 0; // false
+  cp->exit = 0; // false
   sema_init(&cp->load_sema, 0);
   sema_init(&cp->exit_sema, 0);
   list_push_back(&thread_current()->child_list, &cp->elem);

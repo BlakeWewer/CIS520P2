@@ -177,7 +177,7 @@ syscall_exec (const char *cmd_line)
 		sema_down(&child_process_ptr->load_sema);
 		
 	/* check if process failed to load */
-	if (child_process_ptr->load_status == LOAD_FAILED)
+	if (child_process_ptr->load_status == LOAD_FAIL)
 	{
 		remove_child_process(child_process_ptr);
 		return ERROR;
@@ -220,7 +220,7 @@ int
 syscall_open (const char *file)
 {
 	lock_acquire(&file_system_lock);
-	struct file *file_ptr = filesys_open(file_name);
+	struct file *file_ptr = filesys_open(file);
 	if (!file_ptr)
 	{
 		lock_release(&file_system_lock);
@@ -254,7 +254,7 @@ syscall_read (int fd, void *buffer, unsigned length)
 	if (length <= 0)
 		return length;
 		
-	if (fd == STD_INPUT)
+	if (fd == 0)
 	{
 		unsigned i = 0;
 		uint8_t *local_buf = (uint8_t *)buffer;
@@ -275,3 +275,219 @@ syscall_read (int fd, void *buffer, unsigned length)
 	lock_release(&file_system_lock);
 	return bytes_read;
 }
+
+/* syscall_write */
+int 
+syscall_write (int filedes, const void * buffer, unsigned byte_size)
+{
+    if (byte_size <= 0)
+    {
+      return byte_size;
+    }
+    if (filedes == 1)
+    {
+      putbuf (buffer, byte_size); // from stdio.h
+      return byte_size;
+    }
+    
+    // start writing to file
+    lock_acquire(&file_system_lock);
+    struct file *file_ptr = get_file(filedes);
+    if (!file_ptr)
+    {
+      lock_release(&file_system_lock);
+      return ERROR;
+    }
+    int bytes_written = file_write(file_ptr, buffer, byte_size); // file.h
+    lock_release (&file_system_lock);
+    return bytes_written;
+}
+
+/* syscall_seek */
+void
+syscall_seek (int filedes, unsigned new_position)
+{
+  lock_acquire(&file_system_lock);
+  struct file *file_ptr = get_file(filedes);
+  if (!file_ptr)
+  {
+    lock_release(&file_system_lock);
+    return;
+  }
+  file_seek(file_ptr, new_position);
+  lock_release(&file_system_lock);
+}
+
+/* syscall_tell */
+unsigned
+syscall_tell(int filedes)
+{
+  lock_acquire(&file_system_lock);
+  struct file *file_ptr = get_file(filedes);
+  if (!file_ptr)
+  {
+    lock_release(&file_system_lock);
+    return ERROR;
+  }
+  off_t offset = file_tell(file_ptr); //from file.h
+  lock_release(&file_system_lock);
+  return offset;
+}
+
+/* syscall_close */
+void
+syscall_close(int filedes)
+{
+  lock_acquire(&file_system_lock);
+  process_close_file(filedes);
+  lock_release(&file_system_lock);
+}
+
+
+/* function to check if pointer is valid */
+void
+validate_ptr (const void *vaddr)
+{
+    if (vaddr < USER_VADDR_BOTTOM || !is_user_vaddr(vaddr))
+    {
+      // virtual memory address is not reserved for us (out of bound)
+      syscall_exit(ERROR);
+    }
+}
+
+/* function to check if string is valid */
+void
+validate_str (const void* str)
+{
+    for (; * (char *) getpage_ptr(str) != 0; str = (char *) str + 1);
+}
+
+/* function to check if buffer is valid */
+void
+validate_buffer(const void* buf, unsigned byte_size)
+{
+  unsigned i = 0;
+  char* local_buffer = (char *)buf;
+  for (; i < byte_size; i++)
+  {
+    validate_ptr((const void*)local_buffer);
+    local_buffer++;
+  }
+}
+
+/* get the pointer to page */
+int
+getpage_ptr(const void *vaddr)
+{
+  void *ptr = pagedir_get_page(thread_current()->pagedir, vaddr);
+  if (!ptr)
+  {
+    syscall_exit(ERROR);
+  }
+  return (int)ptr;
+}
+
+/* find a child process based on pid */
+struct child_process* find_child_process(int pid)
+{
+  struct thread *t = thread_current();
+  struct list_elem *e;
+  struct list_elem *next;
+  
+  for (e = list_begin(&t->child_list); e != list_end(&t->child_list); e = next)
+  {
+    next = list_next(e);
+    struct child_process *cp = list_entry(e, struct child_process, elem);
+    if (pid == cp->pid)
+    {
+      return cp;
+    }
+  }
+  return NULL;
+}
+
+/* remove a specific child process */
+void
+remove_child_process (struct child_process *cp)
+{
+  list_remove(&cp->elem);
+  free(cp);
+}
+
+/* remove all child processes for a thread */
+void remove_all_child_processes (void) 
+{
+  struct thread *t = thread_current();
+  struct list_elem *next;
+  struct list_elem *e = list_begin(&t->child_list);
+  
+  for (;e != list_end(&t->child_list); e = next)
+  {
+    next = list_next(e);
+    struct child_process *cp = list_entry(e, struct child_process, elem);
+    list_remove(&cp->elem); //remove child process
+    free(cp);
+  }
+}
+
+/* add file to file list and return file descriptor of added file*/
+int
+add_file (struct file *file_name)
+{
+  struct process_file *process_file_ptr = malloc(sizeof(struct process_file));
+  if (!process_file_ptr)
+  {
+    return ERROR;
+  }
+  process_file_ptr->file = file_name;
+  process_file_ptr->file_descr = thread_current()->file_descr;
+  thread_current()->file_descr++;
+  list_push_back(&thread_current()->file_list, &process_file_ptr->elem);
+  return process_file_ptr->file_descr;
+  
+}
+
+/* get file that matches file descriptor */
+struct file*
+get_file (int filedes)
+{
+  struct thread *t = thread_current();
+  struct list_elem* next;
+  struct list_elem* e = list_begin(&t->file_list);
+  
+  for (; e != list_end(&t->file_list); e = next)
+  {
+    next = list_next(e);
+    struct process_file *process_file_ptr = list_entry(e, struct process_file, elem);
+    if (filedes == process_file_ptr->fd)
+    {
+      return process_file_ptr->file;
+    }
+  }
+  return NULL; // nothing found
+}
+
+
+/* close the desired file descriptor */
+void
+process_close_file (int file_descriptor)
+{
+  struct thread *t = thread_current();
+  struct list_elem *next;
+  struct list_elem *e = list_begin(&t->file_list);
+  
+  for (;e != list_end(&t->file_list); e = next)
+  {
+    next = list_next(e);
+    struct process_file *process_file_ptr = list_entry (e, struct process_file, elem);
+    if (file_descriptor == process_file_ptr->fd || file_descriptor == CLOSE_ALL_FD)
+    {
+      file_close(process_file_ptr->file);
+      list_remove(&process_file_ptr->elem);
+      free(process_file_ptr);
+      if (file_descriptor != CLOSE_ALL_FD)
+      {
+        return;
+      }
+    }
+  }
