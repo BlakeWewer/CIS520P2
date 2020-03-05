@@ -19,10 +19,12 @@ thread.h:
     int is_thread_alive(int pid);
     struct child_process* add_child_process(int pid);
     void thread_release_locks(void);
+    Added vars to thread struct
 
-    Referenced: https://github.com/st2092/pintos-user-programs
+    Referenced: https://github.com/st2092/pintos-user-programs and https://github.com/ChristianJHughes/pintos-project2
 
 thread.c:
-    implemented child and parent process stuff
+    implemented child and parent process
+    Added init for child and semas
 
-    Referenced: https://github.com/st2092/pintos-user-programs
+    Referenced: https://github.com/st2092/pintos-user-programs and https://github.com/ChristianJHughes/pintos-project2

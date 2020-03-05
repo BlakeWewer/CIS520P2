@@ -29,32 +29,38 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp, char **s
    before process_execute() returns.  Returns the new process's
    thread id, or TID_ERROR if the thread cannot be created. */
 tid_t
-process_execute (const char *file_name) 
+process_execute (const char* file_name) 
 {
   char *fn_copy;
   tid_t tid;
 
   char *split_file_name;
-  file_name = strtok_r((char*)file_name, " ", &split_file_name);
-
-  /* Make a copy of FILE_NAME.
+  char* name = strtok_r((char*) file_name, " ", &split_file_name);
+  if(name == NULL)
+  {
+    return -1;
+  }
+  /* Make a copy of name.
      Otherwise there's a race between the caller and load(). */
   fn_copy = palloc_get_page (0);
   if (fn_copy == NULL)
     return TID_ERROR;
-  strlcpy (fn_copy, file_name, PGSIZE);
+  strlcpy (fn_copy, name, PGSIZE);
 
-  /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  
+  /* Create a new thread to execute name. */
+  tid = thread_create (name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;
+
+
 }
 
 /* A thread function that loads a user process and starts it
    running. */
 static void
-start_process (void *file_name_)
+start_process (void* file_name_)
 {
   char *file_name = file_name_;
   char* save_ptr;
@@ -95,7 +101,33 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
-  return -1;
+  struct thread* c_thread = NULL;
+  struct list_elem* temp;
+
+  if(list_empty(&thread_current()->child_list))
+  {
+    return -1;
+  }
+  
+  for (temp = list_front(&thread_current()->child_list); temp != NULL; temp = temp->next)
+  {
+      struct thread *t = list_entry(temp, struct thread, child_elem);
+      if (t->tid == child_tid)
+      {
+        c_thread = t;
+        break;
+      }
+  }
+
+  // If it isn't, then wait more
+  if(c_thread == NULL)
+  {
+    return -1;
+  }
+
+  list_remove(&c_thread->child_elem);
+  sema_down(&c_thread->waited_on);
+  return c_thread->exit_status;
 }
 
 /* Free the current process's resources. */

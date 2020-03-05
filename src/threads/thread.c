@@ -474,13 +474,17 @@ init_thread (struct thread *t, const char *name, int priority)
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
 
+  list_init(&t->child_list);
   list_init(&t->file_list);
   t->file_descr = 2;          //Minimum allowed value
-  list_init(&t->child_list);
   t->cp = NULL;               //Null at start
   t->parent = -1;             //Don't exist yet
   list_init(&t->lock_list);
   t->executable = NULL;
+  sema_init(&t->waited_on, 0);
+  t->exit_status = -1;
+
+  list_push_back(&all_list, &t->allelem);
   intr_set_level (old_level);
 }
 

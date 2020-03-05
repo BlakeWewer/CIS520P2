@@ -101,11 +101,13 @@ struct thread
 
     /* Owned by thread.c. */
     unsigned magic;                   /* Detects stack overflow. */
+    int exit_status;
     struct list file_list;
     int file_descr;
     struct list child_list;
+    struct list_elem child_elem;
     tid_t parent;
-
+    struct semaphore waited_on;
     struct child_process* cp;
     struct file* executable;
     struct list lock_list;
