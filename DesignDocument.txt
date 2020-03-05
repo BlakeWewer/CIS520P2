@@ -28,3 +28,7 @@ thread.c:
     Added init for child and semas
 
     Referenced: https://github.com/st2092/pintos-user-programs and https://github.com/ChristianJHughes/pintos-project2
+
+
+
+Reference for syscall.h / syscall.c: https://github.com/dillstead/pintos/tree/master/src
