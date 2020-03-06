@@ -440,10 +440,10 @@ add_file (struct file *file_name)
     return ERROR;
   }
   process_file_ptr->file = file_name;
-  process_file_ptr->file_descr = thread_current()->file_descr;
+  process_file_ptr->fd = thread_current()->file_descr;
   thread_current()->file_descr++;
   list_push_back(&thread_current()->file_list, &process_file_ptr->elem);
-  return process_file_ptr->file_descr;
+  return process_file_ptr->fd;
   
 }
 
@@ -470,7 +470,7 @@ get_file (int filedes)
 
 /* close the desired file descriptor */
 void
-process_close_file (int file_descriptor)
+process_close_file (int fdiptor)
 {
   struct thread *t = thread_current();
   struct list_elem *next;
@@ -480,14 +480,15 @@ process_close_file (int file_descriptor)
   {
     next = list_next(e);
     struct process_file *process_file_ptr = list_entry (e, struct process_file, elem);
-    if (file_descriptor == process_file_ptr->fd || file_descriptor == CLOSE_ALL_FD)
+    if (fdiptor == process_file_ptr->fd || fdiptor == CLOSE_ALL_FD)
     {
       file_close(process_file_ptr->file);
       list_remove(&process_file_ptr->elem);
       free(process_file_ptr);
-      if (file_descriptor != CLOSE_ALL_FD)
+      if (fdiptor != CLOSE_ALL_FD)
       {
         return;
       }
     }
   }
+}
