@@ -147,6 +147,18 @@ syscall_halt (void)
 	shutdown_power_off();
 }
 
+void
+get_args(struct intr_frame *f, int *args, int num_of_args)
+{
+  int i;
+  int *ptr;
+  for (i = 0; i < num_of_args; i++)
+  {
+    ptr = (int *) f->esp + i + 1;
+    validate_ptr((const void *) ptr);
+    args[i] = *ptr;
+  }
+}
 
 /* exit */
 void
@@ -440,10 +452,10 @@ add_file (struct file *file_name)
     return ERROR;
   }
   process_file_ptr->file = file_name;
-  process_file_ptr->file_descr = thread_current()->file_descr;
+  process_file_ptr->fd = thread_current()->file_descr;
   thread_current()->file_descr++;
   list_push_back(&thread_current()->file_list, &process_file_ptr->elem);
-  return process_file_ptr->file_descr;
+  return process_file_ptr->fd;
   
 }
 
@@ -491,3 +503,4 @@ process_close_file (int file_descriptor)
       }
     }
   }
+}
