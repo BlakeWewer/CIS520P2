@@ -147,6 +147,18 @@ syscall_halt (void)
 	shutdown_power_off();
 }
 
+void
+get_args(struct intr_frame *f, int *args, int num_of_args)
+{
+  int i;
+  int *ptr;
+  for (i = 0; i < num_of_args; i++)
+  {
+    ptr = (int *) f->esp + i + 1;
+    validate_ptr((const void *) ptr);
+    args[i] = *ptr;
+  }
+}
 
 /* exit */
 void
