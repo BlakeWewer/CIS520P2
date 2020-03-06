@@ -32,3 +32,11 @@ thread.c:
 
 
 Reference for syscall.h / syscall.c: https://github.com/dillstead/pintos/tree/master/src
+
+
+
+Testing:
+    args-none: FAILS - 1 page fault
+    args-single: FAILS - 1 page fault
+
+

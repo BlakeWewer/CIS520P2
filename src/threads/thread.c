@@ -626,6 +626,7 @@ struct child_process* add_child_process (int pid)
   cp->exit = 0; // false
   sema_init(&cp->load_sema, 0);
   sema_init(&cp->exit_sema, 0);
+  sema_init(&cp->waited_on, 0);
   list_push_back(&thread_current()->child_list, &cp->elem);
 
   return cp;

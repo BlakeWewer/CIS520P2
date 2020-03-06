@@ -20,6 +20,7 @@ struct child_process {
   int status;
   struct semaphore load_sema;
   struct semaphore exit_sema;
+  struct semaphore waited_on;
   struct list_elem elem;
 };
 
