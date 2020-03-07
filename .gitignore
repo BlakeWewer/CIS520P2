@@ -1,0 +1,4 @@
+.vscode/
+src/examples/*.a
+src/examples/**/*.o
+src/utils/*.o
