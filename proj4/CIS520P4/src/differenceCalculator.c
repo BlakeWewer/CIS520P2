@@ -25,3 +25,5 @@ int calc_difference(char* line1, char* line2, int line1_length, int line2_length
 
     return sum1 - sum2;
 }
+
+void print_difference() {}
