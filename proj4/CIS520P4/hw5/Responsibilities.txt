@@ -1,0 +1,5 @@
+Pthreads: Dom
+
+OpenMP: Sree
+
+MPI: Blake
