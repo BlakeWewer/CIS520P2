@@ -1,0 +1,44 @@
+Changes Made:
+
+Process.c:
+
+    process_execute()
+        Added split_file_name and strtok_r on file_name
+
+    setup_stack(void **esp, char **save_ptr, const char *file_name) 
+
+    static bool load (const char *cmdline, void (**eip) (void), void **esp, char **saveptr)
+
+    Referenced: https://github.com/st2092/pintos-user-programs
+
+
+synch.h:
+    struct list_elem elem;
+
+thread.h:
+    int is_thread_alive(int pid);
+    struct child_process* add_child_process(int pid);
+    void thread_release_locks(void);
+    Added vars to thread struct
+
+    Referenced: https://github.com/st2092/pintos-user-programs and https://github.com/ChristianJHughes/pintos-project2
+
+thread.c:
+    implemented child and parent process
+    Added init for child and semas
+
+    Referenced: https://github.com/st2092/pintos-user-programs and https://github.com/ChristianJHughes/pintos-project2
+
+
+
+Reference for syscall.h / syscall.c: https://github.com/dillstead/pintos/tree/master/src
+
+
+REFERENCE FOR TEST FIXING: https://static1.squarespace.com/static/5b18aa0955b02c1de94e4412/t/5b85fad2f950b7b16b7a2ed6/1535507195196/Pintos+Guide
+
+
+Testing:
+    args-none: FAILS - 1 page fault
+    args-single: FAILS - 1 page fault
+
+
